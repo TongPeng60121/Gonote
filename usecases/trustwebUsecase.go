@@ -5,22 +5,38 @@ import (
 	repository "gonote/repository"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 // 使用 ClientID 進行獲取
-func SearchTrust(db *gorm.DB, clientID string) []models.Searchtrustweb {
+func SearchTrust(db *gorm.DB, c *gin.Context) {
+	clientID := c.Param("clientID")
 	trustweb := repository.GetTrustWeb(db, clientID)
-	return trustweb
+	if len(trustweb) == 0 {
+		c.JSON(404, gin.H{"error": "TrustWeb not found"})
+		return
+	}
+	c.JSON(200, trustweb)
 }
 
 // 統計被使用的信任網站數量
-func SearchTrustCount(db *gorm.DB) []models.UrlCount {
-	trustweb := repository.GetUrlCounts(db)
-	return trustweb
+func SearchTrustCount(db *gorm.DB, c *gin.Context) {
+	TrustCount := repository.GetUrlCounts(db)
+	if len(TrustCount) == 0 {
+		c.JSON(404, gin.H{"error": "TrustWeb not found"})
+		return
+	}
+	c.JSON(200, TrustCount)
 }
 
-func InsertSessionToDB(db *gorm.DB, session models.Session) error {
+func InsertSessionToDB(db *gorm.DB, c *gin.Context) {
+	var session models.Session
+	if err := c.ShouldBindJSON(&session); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 	for _, trustWeb := range session.TrustWeb {
 		// 檢查是否已存在相同的 TrustWeb 記錄
 		existingTrustWeb := repository.GetTrustWebFromDB(db, session.SessionID, session.ClientID, trustWeb.Url)
@@ -36,9 +52,13 @@ func InsertSessionToDB(db *gorm.DB, session models.Session) error {
 			Url:       trustWeb.Url,
 			Cdate:     time.Now(),
 		}
+
 		if err := repository.CreateTrustWeb(db, &newTrustWeb); err != nil {
-			return err
+			// 处理插入数据库时的错误
+			c.JSON(500, gin.H{"error": "Failed to insert data into database"})
+			return
 		}
 	}
-	return nil
+
+	c.JSON(201, session)
 }
