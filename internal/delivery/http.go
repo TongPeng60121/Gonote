@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"gonote/internal/usecase"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +39,7 @@ func (h *httpDelivery) GetSession(c *gin.Context) {
 	clientID := c.Param("clientID")
 
 	// 调用 usecase 的 SearchTrustWeb 方法
-	trustweb, err := h.trustWebSiteUsecase.SearchTrustWeb(clientID)
+	trustweb, err := h.trustWebSiteUsecase.SearchTrustWeb(context.Background(), clientID)
 
 	// 处理潜在的错误
 	if err != nil {

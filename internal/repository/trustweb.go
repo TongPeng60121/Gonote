@@ -1,15 +1,18 @@
 package repository
 
 import (
+	"context"
 	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type Trustweb struct {
-	SessionID string
-	Url       string
-	Cdate     string
+	SessionID   string
+	Url         string
+	Cdate       time.Time
+	CdateString string
 }
 
 type Session struct {
@@ -38,7 +41,7 @@ func NewTrustWebRepository(db *gorm.DB) TrustWebRepository {
 	}
 }
 
-func (t *trustWebRepository) GetTrustWebSites(clientID string) ([]Trustweb, error) {
+func (t *trustWebRepository) GetTrustWebSites(_ context.Context, clientID string) ([]Trustweb, error) {
 	var existingTrustWebs []Trustweb
 	result := t.db.Raw("SELECT trustweb.SessionID, Url, trusturl.Cdate FROM trustweb INNER JOIN trusturl ON trustweb.SessionID = trusturl.SessionID WHERE ClientID = ?", clientID).Scan(&existingTrustWebs)
 	if result.Error == gorm.ErrRecordNotFound {
@@ -49,6 +52,11 @@ func (t *trustWebRepository) GetTrustWebSites(clientID string) ([]Trustweb, erro
 		log.Println("Error querying database:", result.Error)
 		return nil, result.Error
 	}
+
+	for i := range existingTrustWebs {
+		existingTrustWebs[i].CdateString = existingTrustWebs[i].Cdate.Format("2006-01-02 15:04:05")
+	}
+
 	// 傳回查詢到的 TrustWeb 數據
 	return existingTrustWebs, nil
 }

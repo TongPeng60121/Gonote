@@ -1,6 +1,8 @@
 package repository
 
+import "context"
+
 type TrustWebRepository interface {
-	GetTrustWebSites(clientID string) ([]Trustweb, error)
+	GetTrustWebSites(ctx context.Context, clientID string) ([]Trustweb, error)
 	//GetUrlCounts(db *gorm.DB) ([]Trustweb, error)
 }

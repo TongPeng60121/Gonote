@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"gonote/internal/repository"
 )
 
@@ -16,8 +17,8 @@ func NewTrustWebSiteUsecase(repo repository.TrustWebRepository) TrustWebSiteUsec
 }
 
 // 使用 ClientID 进行获取
-func (t *trustWebSiteUsecase) SearchTrustWeb(clientID string) ([]repository.Trustweb, error) {
-	trustweb, err := t.trustWebSiteRepo.GetTrustWebSites(clientID)
+func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID string) ([]repository.Trustweb, error) {
+	trustweb, err := t.trustWebSiteRepo.GetTrustWebSites(ctx, clientID)
 	if err != nil {
 		// 处理错误
 		return nil, err
