@@ -1,33 +1,38 @@
-package usecases
+package usecase
 
 import (
-	models "gonote/models"
-	repository "gonote/repository"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+	"gonote/internal/repository"
 )
 
-// 使用 ClientID 進行獲取
-func SearchTrust(db *gorm.DB, c *gin.Context) {
-	clientID := c.Param("clientID")
-	trustweb := repository.GetTrustWeb(db, clientID)
-	if len(trustweb) == 0 {
-		c.JSON(404, gin.H{"error": "TrustWeb not found"})
-		return
+type trustWebSiteUsecase struct {
+	trustWebSiteRepo repository.TrustWebRepository
+}
+
+// NewTrustWebSiteUsecase 创建 TrustWebSiteUsecase 实例
+func NewTrustWebSiteUsecase(repo repository.TrustWebRepository) TrustWebSiteUsecase {
+	return &trustWebSiteUsecase{
+		trustWebSiteRepo: repo,
 	}
-	c.JSON(200, trustweb)
+}
+
+// 使用 ClientID 进行获取
+func (t *trustWebSiteUsecase) SearchTrustWeb(clientID string) ([]repository.Trustweb, error) {
+	trustweb, err := t.trustWebSiteRepo.GetTrustWebSites(clientID)
+	if err != nil {
+		// 处理错误
+		return nil, err
+	}
+	return trustweb, nil
 }
 
 // 統計被使用的信任網站數量
-func SearchTrustCount(db *gorm.DB, c *gin.Context) {
-	TrustCount := repository.GetUrlCounts(db)
-	if len(TrustCount) == 0 {
-		c.JSON(404, gin.H{"error": "TrustWeb not found"})
-		return
+/*func (t *trustWebSiteUsecase) SearchTrustCount(db *gorm.DB) {
+	TrustCount, err := repository.GetUrlCounts()
+	if err != nil {
+		// 处理错误
+		return nil, err
 	}
-	c.JSON(200, TrustCount)
+	return TrustCount, nil
 }
 
 func InsertSessionToDB(db *gorm.DB, c *gin.Context) {
@@ -62,3 +67,4 @@ func InsertSessionToDB(db *gorm.DB, c *gin.Context) {
 
 	c.JSON(201, session)
 }
+*/
