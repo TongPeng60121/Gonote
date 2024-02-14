@@ -6,6 +6,6 @@ import (
 )
 
 type TrustWebSiteUsecase interface {
-	SearchTrustWeb(ctx context.Context, clientID string) ([]repository.Trustweb, error)
-	//SearchTrustCount(db *gorm.DB) ([]repository.UrlCount, error)
+	SearchTrustWeb(ctx context.Context, clientID string) ([]repository.TrustWeb, error)
+	SearchTrustCount(ctx context.Context) ([]repository.UrlCount, error)
 }

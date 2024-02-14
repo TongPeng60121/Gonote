@@ -8,26 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type Trustweb struct {
-	SessionID   string
+type TrustWeb struct {
 	Url         string
 	Cdate       time.Time
 	CdateString string
 }
 
-type Session struct {
-	SessionID string
-	ClientID  string
-}
-
-type TrustwebSession struct {
-	SessionID uint32
-	ClientID  uint32
-	Url       string
-}
-
 type UrlCount struct {
-	TrustwebSession
+	Url   string
 	Count uint32
 }
 
@@ -41,9 +29,9 @@ func NewTrustWebRepository(db *gorm.DB) TrustWebRepository {
 	}
 }
 
-func (t *trustWebRepository) GetTrustWebSites(_ context.Context, clientID string) ([]Trustweb, error) {
-	var existingTrustWebs []Trustweb
-	result := t.db.Raw("SELECT trustweb.SessionID, Url, trusturl.Cdate FROM trustweb INNER JOIN trusturl ON trustweb.SessionID = trusturl.SessionID WHERE ClientID = ?", clientID).Scan(&existingTrustWebs)
+func (t *trustWebRepository) GetTrustWebSites(_ context.Context, clientID string) ([]TrustWeb, error) {
+	var existingTrustWebs []TrustWeb
+	result := t.db.Raw("SELECT Url, trusturl.Cdate FROM trustweb INNER JOIN trusturl ON trustweb.SessionID = trusturl.SessionID WHERE ClientID = ? GROUP BY Url", clientID).Scan(&existingTrustWebs)
 	if result.Error == gorm.ErrRecordNotFound {
 		// 如果未找到相同數據，則傳回 nil
 		return nil, nil
@@ -61,9 +49,9 @@ func (t *trustWebRepository) GetTrustWebSites(_ context.Context, clientID string
 	return existingTrustWebs, nil
 }
 
-/*func (t *trustWebRepository) GetUrlCounts(db *gorm.DB) ([]UrlCount, error) {
+func (t *trustWebRepository) GetUrlCounts(_ context.Context) ([]UrlCount, error) {
 	var urlCounts []UrlCount
-	result := db.Raw("SELECT Url, COUNT(*) as Count FROM trustweb INNER JOIN trusturl ON trustweb.SessionID = trusturl.SessionID GROUP BY url").Scan(&urlCounts)
+	result := t.db.Raw("SELECT Url, COUNT(*) as Count FROM trustweb INNER JOIN trusturl ON trustweb.SessionID = trusturl.SessionID GROUP BY url").Scan(&urlCounts)
 	if result.Error == gorm.ErrRecordNotFound {
 		// 如果未找到相同數據，則傳回 nil
 		return nil, nil
@@ -74,4 +62,4 @@ func (t *trustWebRepository) GetTrustWebSites(_ context.Context, clientID string
 	}
 	// 傳回查詢到的 TrustWeb 數據
 	return urlCounts, nil
-}*/
+}

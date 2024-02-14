@@ -17,7 +17,7 @@ func NewTrustWebSiteUsecase(repo repository.TrustWebRepository) TrustWebSiteUsec
 }
 
 // 使用 ClientID 进行获取
-func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID string) ([]repository.Trustweb, error) {
+func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID string) ([]repository.TrustWeb, error) {
 	trustweb, err := t.trustWebSiteRepo.GetTrustWebSites(ctx, clientID)
 	if err != nil {
 		// 处理错误
@@ -27,8 +27,8 @@ func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID strin
 }
 
 // 統計被使用的信任網站數量
-/*func (t *trustWebSiteUsecase) SearchTrustCount(db *gorm.DB) {
-	TrustCount, err := repository.GetUrlCounts()
+func (t *trustWebSiteUsecase) SearchTrustCount(ctx context.Context) ([]repository.UrlCount, error) {
+	TrustCount, err := t.trustWebSiteRepo.GetUrlCounts(ctx)
 	if err != nil {
 		// 处理错误
 		return nil, err
@@ -36,7 +36,7 @@ func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID strin
 	return TrustCount, nil
 }
 
-func InsertSessionToDB(db *gorm.DB, c *gin.Context) {
+/*ffunc InsertSessionToDB(db *gorm.DB, c *gin.Context) {
 	var session models.Session
 	if err := c.ShouldBindJSON(&session); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
