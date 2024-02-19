@@ -12,12 +12,7 @@ import (
 func main() {
 	Dbname := "trustwebsite" //資料庫
 	db := connectsql.InitDB(Dbname)
-	defer func() {
-		// 通過 db.DB() 獲取底層的 *sql.DB 對象，然後調用其 Close 方法來關閉連接
-		if sqlDB, err := db.DB(); err == nil {
-			sqlDB.Close()
-		}
-	}()
+	defer db.Close()
 
 	// 创建 TrustWebRepository 实例
 	trustWebRepo := repository.NewTrustWebRepository(db)
