@@ -46,11 +46,8 @@ func (t *trustWebSiteUsecase) InsertSessionToDB(ctx context.Context, session []r
 
 	for _, trustWeb := range session {
 		// 檢查是否已存在相同的 TrustWeb 記錄
-		trw_id, err := t.trustWebSiteRepo.GetTrustWebFromDB(ctx, trustWeb.SessionID, trustWeb.ClientID)
-		if trw_id != "" {
-			// 如果已存在相同數據，則直接傳回，不執行插入操作
-			continue
-		} else if err != nil {
+		err := t.trustWebSiteRepo.GetTrustWebFromDB(ctx, trustWeb.SessionID, trustWeb.ClientID)
+		if err != nil {
 			return err
 		} else {
 			newTrustWeb := repository.TrustWebTable{
@@ -64,6 +61,24 @@ func (t *trustWebSiteUsecase) InsertSessionToDB(ctx context.Context, session []r
 			}
 		}
 
+		for _, trustUrl := range trustWeb.TrustWeb {
+			tru_id, err := t.trustWebSiteRepo.GetTrustUrlFromDB(ctx, trustWeb.SessionID, trustUrl.Url)
+			if tru_id != "" {
+				continue
+			} else if err != nil {
+				return err
+			} else {
+				newTrustUrl := repository.TrustUrlTable{
+					Session_id: trustWeb.SessionID,
+					Url:        trustUrl.Url,
+					Cdate:      time.Now(),
+				}
+				if err := t.trustWebSiteRepo.CreateTrustUrl(ctx, newTrustUrl); err != nil {
+					// 处理插入数据库时的错误
+					return err
+				}
+			}
+		}
 		// 插入 TrustWeb 數據
 		/*newTrustWeb := models.Trustweb{
 			SessionID: session.SessionID,

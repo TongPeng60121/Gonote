@@ -93,18 +93,36 @@ func (t *trustWebRepository) GetUrlCounts(_ context.Context, limit string) ([]Ur
 	return urlCounts, nil
 }
 
-func (t *trustWebRepository) GetTrustWebFromDB(_ context.Context, sessionID string, clientID string) (string, error) {
-	trw_id := ""
-	result := t.db.Raw("SELECT trw_id FROM trustweb WHERE session_id = ? AND client_id = ? LIMIT 1", sessionID, clientID).Scan(&trw_id)
+func (t *trustWebRepository) GetTrustWebFromDB(_ context.Context, sessionID string, clientID string) error {
+	result := t.db.Raw("SELECT trw_id FROM trustweb WHERE session_id = ? AND client_id = ? LIMIT 1", sessionID, clientID)
+	if result.Error != nil {
+		return result.Error
+	}
+	// 傳回查詢到的 TrustWeb 數據
+	return nil
+}
+
+func (t *trustWebRepository) GetTrustUrlFromDB(_ context.Context, sessionID string, url string) (string, error) {
+	tru_id := ""
+	result := t.db.Raw("SELECT trw_id FROM trusturl WHERE session_id = ? AND url = ? LIMIT 1", sessionID, url).Scan(&tru_id)
 	if result.Error != nil {
 		return "", result.Error
 	}
 	// 傳回查詢到的 TrustWeb 數據
-	return trw_id, nil
+	return tru_id, nil
 }
 
 func (t *trustWebRepository) CreateTrustWeb(_ context.Context, data TrustWebTable) error {
-	result := t.db.Create(&data)
+	result := t.db.Table("trustweb").Create(&data)
+	if result.Error != nil {
+		return result.Error
+	}
+	// 傳回查詢到的 TrustWeb 數據
+	return nil
+}
+
+func (t *trustWebRepository) CreateTrustUrl(_ context.Context, data TrustUrlTable) error {
+	result := t.db.Table("trusturl").Create(&data)
 	if result.Error != nil {
 		return result.Error
 	}
