@@ -14,16 +14,16 @@ func main() {
 	db := connectsql.InitDB(Dbname)
 	defer db.Close()
 
-	// 创建 TrustWebRepository 实例
+	// 創建 TrustWebRepository
 	trustWebRepo := repository.NewTrustWebRepository(db)
 
-	// 创建 TrustWebSiteUsecase 实例
+	// 創建 TrustWebSiteUsecase
 	trustWebUsecase := usecase.NewTrustWebSiteUsecase(trustWebRepo)
 
-	// 创建 GIN 引擎
+	// 創建 GIN
 	r := gin.Default()
 
-	// 設定路由，提供 trustWebSiteUsecase 实例
+	// 設定路由，提供 trustWebSiteUsecase
 	http.SetupRoutes(r, db, trustWebUsecase)
 
 	// 啟動 GIN 服務

@@ -6,7 +6,7 @@ import (
 )
 
 type TrustWebSiteUsecase interface {
-	SearchTrustWeb(ctx context.Context, clientID string) ([]repository.TrustWeb, error)
+	SearchTrustWeb(ctx context.Context, clientID int) ([]repository.TrustWeb, error)
 	SearchTrustCount(ctx context.Context, limit string) ([]repository.UrlCount, error)
 	InsertSessionToDB(ctx context.Context, session []repository.TrustJson) error
 }

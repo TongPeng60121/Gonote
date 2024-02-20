@@ -17,11 +17,11 @@ func NewTrustWebSiteUsecase(repo repository.TrustWebRepository) TrustWebSiteUsec
 	}
 }
 
-// 使用 ClientID 进行获取
-func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID string) ([]repository.TrustWeb, error) {
+// 使用 ClientID 查詢
+func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID int) ([]repository.TrustWeb, error) {
 	trustweb, err := t.trustWebSiteRepo.GetTrustWebSites(ctx, clientID)
 	if err != nil {
-		// 处理错误
+		// 處理錯誤
 		return nil, err
 	}
 
@@ -36,7 +36,7 @@ func (t *trustWebSiteUsecase) SearchTrustWeb(ctx context.Context, clientID strin
 func (t *trustWebSiteUsecase) SearchTrustCount(ctx context.Context, limit string) ([]repository.UrlCount, error) {
 	TrustCount, err := t.trustWebSiteRepo.GetUrlCounts(ctx, limit)
 	if err != nil {
-		// 处理错误
+		// 處理錯誤
 		return nil, err
 	}
 	return TrustCount, nil
@@ -46,52 +46,38 @@ func (t *trustWebSiteUsecase) InsertSessionToDB(ctx context.Context, session []r
 
 	for _, trustWeb := range session {
 		// 檢查是否已存在相同的 TrustWeb 記錄
-		err := t.trustWebSiteRepo.GetTrustWebFromDB(ctx, trustWeb.SessionID, trustWeb.ClientID)
+		result, err := t.trustWebSiteRepo.GetTrustWebFromDB(ctx, trustWeb.SessionID, trustWeb.ClientID)
+
 		if err != nil {
 			return err
-		} else {
+		} else if result {
 			newTrustWeb := repository.TrustWebTable{
 				Session_id: trustWeb.SessionID,
 				Client_id:  trustWeb.ClientID,
 				Cdate:      time.Now(),
 			}
 			if err := t.trustWebSiteRepo.CreateTrustWeb(ctx, newTrustWeb); err != nil {
-				// 处理插入数据库时的错误
+				// 返回新增錯誤
 				return err
 			}
 		}
 
 		for _, trustUrl := range trustWeb.TrustWeb {
-			tru_id, err := t.trustWebSiteRepo.GetTrustUrlFromDB(ctx, trustWeb.SessionID, trustUrl.Url)
-			if tru_id != "" {
-				continue
-			} else if err != nil {
+			result, err := t.trustWebSiteRepo.GetTrustUrlFromDB(ctx, trustWeb.SessionID, trustUrl.Url)
+			if err != nil {
 				return err
-			} else {
+			} else if result {
 				newTrustUrl := repository.TrustUrlTable{
 					Session_id: trustWeb.SessionID,
 					Url:        trustUrl.Url,
 					Cdate:      time.Now(),
 				}
 				if err := t.trustWebSiteRepo.CreateTrustUrl(ctx, newTrustUrl); err != nil {
-					// 处理插入数据库时的错误
+					// 返回新增錯誤
 					return err
 				}
 			}
 		}
-		// 插入 TrustWeb 數據
-		/*newTrustWeb := models.Trustweb{
-			SessionID: session.SessionID,
-			ClientID:  session.ClientID,
-			Url:       trustWeb.Url,
-			Cdate:     time.Now(),
-		}
-
-		if err := repository.CreateTrustWeb(db, &newTrustWeb); err != nil {
-			// 处理插入数据库时的错误
-			c.JSON(500, gin.H{"error": "Failed to insert data into database"})
-			return
-		}*/
 	}
 
 	return nil

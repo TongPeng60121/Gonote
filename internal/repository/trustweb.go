@@ -23,8 +23,8 @@ type trustWebRepository struct {
 }
 
 type TrustJson struct {
-	SessionID string
-	ClientID  string
+	SessionID int
+	ClientID  int
 	TrustWeb  []TrustUrl
 }
 
@@ -32,14 +32,18 @@ type TrustUrl struct {
 	Url string
 }
 
+type HasValue struct {
+	ID string
+}
+
 type TrustWebTable struct {
-	Session_id string
-	Client_id  string
+	Session_id int
+	Client_id  int
 	Cdate      time.Time
 }
 
 type TrustUrlTable struct {
-	Session_id string
+	Session_id int
 	Url        string
 	Cdate      time.Time
 }
@@ -50,7 +54,7 @@ func NewTrustWebRepository(db *gorm.DB) TrustWebRepository {
 	}
 }
 
-func (t *trustWebRepository) GetTrustWebSites(ctx context.Context, clientID string) ([]TrustWeb, error) {
+func (t *trustWebRepository) GetTrustWebSites(ctx context.Context, clientID int) ([]TrustWeb, error) {
 	var existingTrustWebs []TrustWeb
 	// 預備 SQL 查詢
 	stmt, err := t.db.DB().PrepareContext(ctx, "SELECT url, trusturl.cdate FROM trustweb INNER JOIN trusturl ON trustweb.session_id = trusturl.session_id WHERE client_id = ? GROUP BY url")
@@ -79,7 +83,7 @@ func (t *trustWebRepository) GetTrustWebSites(ctx context.Context, clientID stri
 		return nil, err
 	}
 
-	// 傳回查詢到的 TrustWeb 數據
+	// 傳回查詢到的 TrustWeb 資料
 	return existingTrustWebs, nil
 }
 
@@ -89,27 +93,40 @@ func (t *trustWebRepository) GetUrlCounts(_ context.Context, limit string) ([]Ur
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	// 傳回查詢到的 TrustWeb 數據
+	// 傳回查詢到的 UrlCount 資料
 	return urlCounts, nil
 }
 
-func (t *trustWebRepository) GetTrustWebFromDB(_ context.Context, sessionID string, clientID string) error {
-	result := t.db.Raw("SELECT trw_id FROM trustweb WHERE session_id = ? AND client_id = ? LIMIT 1", sessionID, clientID)
+func (t *trustWebRepository) GetTrustWebFromDB(_ context.Context, sessionID int, clientID int) (bool, error) {
+	var trw_id HasValue
+	result := t.db.Raw("SELECT trw_id AS ID FROM trustweb WHERE session_id = ? AND client_id = ? LIMIT 1", sessionID, clientID).Scan(&trw_id)
 	if result.Error != nil {
-		return result.Error
+		if result.RecordNotFound() {
+			// 未查到資料
+			return true, nil
+		} else {
+			return false, result.Error
+		}
+	} else {
+		// 傳回查詢到的 tru_id 資料
+		return false, nil
 	}
-	// 傳回查詢到的 TrustWeb 數據
-	return nil
 }
 
-func (t *trustWebRepository) GetTrustUrlFromDB(_ context.Context, sessionID string, url string) (string, error) {
-	tru_id := ""
-	result := t.db.Raw("SELECT trw_id FROM trusturl WHERE session_id = ? AND url = ? LIMIT 1", sessionID, url).Scan(&tru_id)
+func (t *trustWebRepository) GetTrustUrlFromDB(_ context.Context, sessionID int, url string) (bool, error) {
+	var tru_id HasValue
+	result := t.db.Raw("SELECT tru_id AS ID FROM trusturl WHERE session_id = ? AND url = ? LIMIT 1", sessionID, url).Scan(&tru_id)
 	if result.Error != nil {
-		return "", result.Error
+		if result.RecordNotFound() {
+			// 未查到資料
+			return true, nil
+		} else {
+			return false, result.Error
+		}
+	} else {
+		// 傳回查詢到的 tru_id 資料
+		return false, nil
 	}
-	// 傳回查詢到的 TrustWeb 數據
-	return tru_id, nil
 }
 
 func (t *trustWebRepository) CreateTrustWeb(_ context.Context, data TrustWebTable) error {
@@ -117,7 +134,6 @@ func (t *trustWebRepository) CreateTrustWeb(_ context.Context, data TrustWebTabl
 	if result.Error != nil {
 		return result.Error
 	}
-	// 傳回查詢到的 TrustWeb 數據
 	return nil
 }
 
@@ -126,6 +142,5 @@ func (t *trustWebRepository) CreateTrustUrl(_ context.Context, data TrustUrlTabl
 	if result.Error != nil {
 		return result.Error
 	}
-	// 傳回查詢到的 TrustWeb 數據
 	return nil
 }
